@@ -1,5 +1,5 @@
 import numpy as np
-import assemble1dof
+from poisson import assemble1dof
 from scipy import sparse
 import math
 from numba import jit

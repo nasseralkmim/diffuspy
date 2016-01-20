@@ -3,11 +3,11 @@ import numpy as np
 from scipy.sparse.linalg import spsolve
 from scipy import sparse
 import matplotlib.pyplot as plt
-import gmsh
-import element1dof
-import assemble1dof
-import plotter
-import boundaryconditions1dof
+from poisson import gmsh
+from poisson import element1dof
+from poisson import assemble1dof
+from poisson import plotter
+from poisson import boundaryconditions1dof
 
 def solver(meshName, material, internal_heat, flux_imposed,
            temperature_imposed, plotUndeformed, plotTemperature):
