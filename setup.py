@@ -1,13 +1,13 @@
 from setuptools import setup
 
-setup(name='pyisson',
+setup(name='pyheat',
       version='0.1',
-      description='Poisson equation solver',
+      description='heat equation solver',
       url='nasseralkmim.github.io',
       author='Nasser Alkmim',
       author_email='nasser.alkmim@gmail.com',
       license='MIT',
-      packages=['pyisson'],
+      packages=['pyheat'],
       install_requires=[
           'numpy',
           'matplotlib',
