@@ -1,0 +1,13 @@
+setup.py
+pyisson/assemble1dof.py
+pyisson/boundaryconditions1dof.py
+pyisson/element1dof.py
+pyisson/fem.py
+pyisson/gmsh.py
+pyisson/plotter.py
+pyisson.egg-info/PKG-INFO
+pyisson.egg-info/SOURCES.txt
+pyisson.egg-info/dependency_links.txt
+pyisson.egg-info/not-zip-safe
+pyisson.egg-info/requires.txt
+pyisson.egg-info/top_level.txt

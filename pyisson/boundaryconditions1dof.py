@@ -1,5 +1,5 @@
 import numpy as np
-from poisson import assemble1dof
+from pyisson import assemble1dof
 from scipy import sparse
 import math
 from numba import jit
@@ -99,7 +99,6 @@ def neumann(mesh, traction):
     """
     Tele = np.zeros((4, mesh.num_ele))
 
-
     gp = np.array([[[-1.0/math.sqrt(3), -1.0],
                     [1.0/math.sqrt(3), -1.0]],
                    [[1.0, -1.0/math.sqrt(3)],
@@ -108,7 +107,6 @@ def neumann(mesh, traction):
                     [1.0/math.sqrt(3), 1.0]],
                    [[-1.0, -1.0/math.sqrt(3)],
                     [-1.0, 1/math.sqrt(3)]]])
-
 
     for line in traction(1,1).keys():
         for ele, side, l in mesh.boundary_elements:
@@ -225,7 +223,6 @@ def neumann_transient(mesh, traction, time):
     """
     Tele = np.zeros((4, mesh.num_ele))
 
-
     gp = np.array([[[-1.0/math.sqrt(3), -1.0],
                     [1.0/math.sqrt(3), -1.0]],
                    [[1.0, -1.0/math.sqrt(3)],
@@ -234,7 +231,6 @@ def neumann_transient(mesh, traction, time):
                     [1.0/math.sqrt(3), 1.0]],
                    [[-1.0, -1.0/math.sqrt(3)],
                     [-1.0, 1/math.sqrt(3)]]])
-
 
     for line in traction(1, 1, 1).keys():
         for ele, side, l in mesh.boundary_elements:

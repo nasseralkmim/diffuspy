@@ -5,36 +5,6 @@ import os
 class parse:
     """Produce mesh with gmsh file.
 
-    .. note ::
-
-        parse: analyze into its parts.
-
-
-    .. note::
-
-        In order to create a mesh for the code follow the steps:
-
-        1. Draw the geometry
-
-            1.1 Draw Points.
-
-            1.2 Connect these points with straight lines.
-
-            1.3 Define a plane surface.
-
-        2. Add physical groups where the BC are going to be applied
-
-            2.1 Add lines in order to get the nodes in that line.
-
-            2.2 Add a Surface in order to get the connectivity.
-
-        3. Change the subdivision algorithm to "all quads" ontools-mesh-general tab.
-
-        4. Click on 2D to create the mesh. It should contain quad elements only.
-
-        5. Save the .msh file with the mesh with the same name as the .geo.
-
-
     Args:
         filename (str): Name of the file with the mesh geometry and properties.
 
@@ -73,7 +43,7 @@ class parse:
 
     """
     def __init__(self, filename):
-        path = os.path.join("..\mesh", filename+'.geo')
+        path = os.path.join(filename+'.geo')
         geometry_feeder = open(path, 'r')
 
         surfaces = []
@@ -83,7 +53,8 @@ class parse:
         self.physicalSurface = {}
         self.lineLoop = {}
         self.line = {}
-        #counters for line tag
+        
+        # counters for line tag
         i = 0
         for txtLine in geometry_feeder:
             txtLine = txtLine.strip()
@@ -103,7 +74,6 @@ class parse:
                 number = int(t[t.find('{')+1:t.find('}')]) - 1
                 self.physicalLine[plTag] = number
 
-
             if txtLine.startswith('Physical Surface('):
                 surfaces.append(
                     int(txtLine[txtLine.find('(')+1:txtLine.find(')')]) - 1
@@ -121,7 +91,7 @@ class parse:
 
                 self.line[lTag] = [nf, nl]
 
-            #line loop tag, line1 line2 ....
+            # line loop tag, line1 line2 ....
             if txtLine.startswith('Line Loop('):
                 lpTag = int(txtLine[txtLine.find('(')+1:txtLine.find(')')])
                 lpList = []
@@ -131,10 +101,10 @@ class parse:
                 pf = 1
                 if tf[1] == '-':
                     pf = 2
-                nf= int(tf[tf.find('{')+pf:tf.find(',')]) - 1
+                nf = int(tf[tf.find('{')+pf:tf.find(',')]) - 1
                 lpList.append(nf)
 
-                for i in range(4,len(columns)-1):
+                for i in range(4, len(columns)-1):
                     t = columns[i]
                     if columns[i][0] == '-':
                         print(t[-1])
@@ -163,15 +133,14 @@ class parse:
         self.boundaryLines = np.asarray(boundaryLines)
         self.surfaces = np.asarray(surfaces)
 
-
-        path2 = os.path.join("..\mesh", filename+'.msh')
+        path2 = os.path.join(filename+'.msh')
         mesh_feeder = open(path2, 'r')
 
         nodes_coord = []
         ele_conn = []
         boundary_nodes = []
         ele_surface = []
-        i=0
+        i = 0
         for line in mesh_feeder:
 
             line = line.strip()
@@ -196,8 +165,6 @@ class parse:
                 boundary_nodes.append([int(columns[4]) - 1,
                                        int(columns[5]) - 1,
                                        int(columns[6]) - 1])
-
-
 
         self.boundary_nodes = np.asarray(boundary_nodes)
         self.nodes_coord = np.asarray(nodes_coord)
@@ -243,7 +210,6 @@ class parse:
 
         self.gmsh = 1.0
 
-
     def basisFunction2D(self, natural_coord):
         """Create the basis function and its properties.
 
@@ -288,7 +254,6 @@ class parse:
         self.dphi_ei[0, :] = 0.5 * self.chi[:, 0] * e2_term
         self.dphi_ei[1, :] = 0.5 * self.chi[:, 1] * e1_term
 
-
     def mapping(self, e):
         """maps from cartesian to isoparametric.
 
@@ -307,7 +272,6 @@ class parse:
             self.phi[:], self.nodes_coord[self.ele_conn[e, :], 1])
 
         return x1_o_e1e2, x2_o_e1e2
-
 
     def eleJacobian(self, element_nodes_coord):
         """Creates the Jacobian matrix of the mapping between an element
@@ -330,7 +294,6 @@ class parse:
 
         self.detJac = ((self.Jac[0, 0]*self.Jac[1, 1] -
                               self.Jac[0, 1]*self.Jac[1, 0]))
-
 
         # JacInv = [ e1_x1 e2_x1
         #            e1_x2 e2_x2 ]
@@ -358,4 +321,3 @@ class parse:
             (self.Jac[0, 0]**2. + self.Jac[0, 1]**2.)**(1./2.),
             (self.Jac[1, 0]**2. + self.Jac[1, 1]**2.)**(1./2.)
         ])
-

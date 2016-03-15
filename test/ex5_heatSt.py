@@ -1,8 +1,10 @@
-__author__ = 'Nasser'
-
-import poisson.heat2d as heat2d
+from pyisson import fem
+from pyisson import gmsh
+from pyisson import plotter
 
 meshName = 'square'
+
+mesh = gmsh.parse(meshName)
 
 material = {'k-c-rho': [10.0, 1.0, 0.1]}
 
@@ -24,18 +26,10 @@ def temperature_imposed(x1, x2):
         3: 10.0,
     }
 
-heat2d.solver(meshName,
-              material,
-              internal_heat,
-              flux_imposed,
-              temperature_imposed,
-              plotUndeformed={'Domain': True,
-                              'Elements': True,
-                              'NodeLabel': False,
-                              'EdgesLabel':  True,
-                              'ElementLabel': False,
-                              'SurfaceLabel': False},
-              plotTemperature={'Contour': True}
-              )
+T = fem.solver(mesh, material, internal_heat, flux_imposed,
+               temperature_imposed)
 
+plotter.contour(mesh, T, cmap='hot', lev=10)
+plotter.model(mesh, ele=True)
 
+plotter.show()
