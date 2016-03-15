@@ -1,19 +1,24 @@
 from pyisson import fem
 from pyisson import gmsh
 from pyisson import plotter
+from pyisson import data
 
 meshName = 'square'
 
 mesh = gmsh.parse(meshName)
 
 material = {'k-c-rho': [10.0, 1.0, 0.1]}
+surf = data.Collect()
+surf.k[0] = 10
+surf.c[0] = 1
+surf.rho[0] = 0.1
 
 
-def internal_heat(x1, x2):
-    return 0.0
+def internal_heat(x1, x2, t=1):
+    return x1*x2*t
 
 
-def flux_imposed(x1, x2):
+def flux_bc(x1, x2):
     return {
         1: 100.0,
         2: 0.0,
@@ -21,7 +26,7 @@ def flux_imposed(x1, x2):
     }
 
 
-def temperature_imposed(x1, x2):
+def temperature_bc(x1, x2):
     return {
         3: 10.0,
     }
