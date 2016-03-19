@@ -3,9 +3,10 @@ from setuptools import setup
 setup(name='diffuspy',
       version='0.1',
       description='General diffusion equation in 2d solver using FEM',
-      url='nasseralkmim.github.io',
+      url='https://github.com/nasseralkmim/diffuspy',
       author='Nasser Alkmim',
       author_email='nasser.alkmim@gmail.com',
+      donwload_url='https://github.com/nasseralkmim/diffuspy/releases/tag/0.1',
       license='MIT',
       packages=['diffuspy'],
       install_requires=[
