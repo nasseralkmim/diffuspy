@@ -1,13 +1,13 @@
 from setuptools import setup
 
-setup(name='pyheat',
+setup(name='diffuspy',
       version='0.1',
-      description='heat equation solver',
+      description='General diffusion equation in 2d solver using FEM',
       url='nasseralkmim.github.io',
       author='Nasser Alkmim',
       author_email='nasser.alkmim@gmail.com',
       license='MIT',
-      packages=['pyheat'],
+      packages=['diffuspy'],
       install_requires=[
           'numpy',
           'matplotlib',
