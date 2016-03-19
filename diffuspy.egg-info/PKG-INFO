@@ -2,7 +2,7 @@ Metadata-Version: 1.0
 Name: diffuspy
 Version: 0.1
 Summary: General diffusion equation in 2d solver using FEM
-Home-page: nasseralkmim.github.io
+Home-page: https://github.com/nasseralkmim/diffuspy
 Author: Nasser Alkmim
 Author-email: nasser.alkmim@gmail.com
 License: MIT
