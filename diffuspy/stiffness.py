@@ -9,7 +9,12 @@ def K_matrix(model, material):
     for e, conn in enumerate(model.CONN):
         xyz = model.XYZ[conn]
         surf = model.surf_of_ele[e]
-        cndtvt = material.cndtvt[surf]
+        try:
+            cndtvt = material.cndtvt[surf]
+        except:
+            print('Surface {} has no property assigned!'
+                  'Default 1.0 was used!'.format(surf))
+            cndtvt = 1.0
 
         k = k_matrix(model, xyz, cndtvt)
 

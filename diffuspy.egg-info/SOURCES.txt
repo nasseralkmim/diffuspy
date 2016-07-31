@@ -1,10 +1,8 @@
 setup.py
 diffuspy/__init__.py
-diffuspy/assemble1dof.py
 diffuspy/boundconditions.py
 diffuspy/data.py
 diffuspy/draw.py
-diffuspy/element1dof.py
 diffuspy/gmsh.py
 diffuspy/load.py
 diffuspy/mass.py

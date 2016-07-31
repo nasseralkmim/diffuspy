@@ -22,10 +22,12 @@ def elements_label(model, ax):
 
 
 def surface_label(model, ax):
+    # initalize the surface count
     i = 0
     for phy_surf_tag, surf_tag in model.physical_surf.items():
-        print(phy_surf_tag, surf_tag)
+        # line loop tag
         ll_tag = model.surf[surf_tag]
+
         xm = 0.0
         ym = 0.0
         for node in model.line_loop[ll_tag]:
@@ -99,7 +101,7 @@ def nodes_label(model, ax):
     nx.draw_networkx_labels(G, positions, label, font_size=9, ax=ax)
 
 
-def domain(model, ax, color):
+def domain(model, ax, color='k'):
     """Draw domain region
 
     """
@@ -114,18 +116,17 @@ def domain(model, ax, color):
         label.append(i)
         G.add_node(i, posxy=(X[i], Y[i]))
 
-    for pl_tag, line_tag in model.physical_line.items():
-        lineNodes = model.line[line_tag]
-        G.add_edge(lineNodes[0], lineNodes[1])
+    for pl_tag, l_tag in model.physical_line.items():
+        n = model.line[l_tag]
+        G.add_edge(n[0], n[1])
 
     positions = nx.get_node_attributes(G, 'posxy')
 
-    nx.draw_networkx_edges(G, positions, edge_color=color,
-                           font_size=0, width=1, origin='lower', ax=ax)
+    nx.draw_networkx_edges(G, positions, edge_color=color, node_size=0,
+                           font_size=0, width=1, ax=ax)
 
 
-def elements(model, ax, color):
-
+def elements(model, ax, color='k'):
     c = model.XYZ
 
     X, Y = c[:, 0], c[:, 1]
@@ -143,7 +144,32 @@ def elements(model, ax, color):
     positions = nx.get_node_attributes(G2, 'posxy')
 
     nx.draw_networkx(G2, positions, node_size=0, edge_color=color,
-                     font_size=0,  width=1)
+                     font_size=0,  width=1, ax=ax)
+
+
+def surface(model, ax, color='k'):
+    c = model.XYZ
+
+    X, Y = c[:, 0], c[:, 1]
+
+    G2 = nx.Graph()
+
+    label = []
+    for i in range(len(X)):
+        label.append(i)
+        G2.add_node(i, posxy=(X[i], Y[i]))
+
+    for phy_surf_tag, surf_tag in model.physical_surf.items():
+        # line loop tag
+        ll_tag = model.surf[surf_tag]
+
+        for l_tag in model.line_loop[ll_tag]:
+            n1, n2 = model.line[l_tag]
+            G2.add_edge(n1, n2)
+
+    positions = nx.get_node_attributes(G2, 'posxy')
+    nx.draw_networkx_edges(G2, positions, node_size=0, edge_color=color,
+                           font_size=0, width=1, ax=ax)
 
 
 def tricontourf(model, U, ax, cmap='plasma', lev=10, cl=True, vmin=None,

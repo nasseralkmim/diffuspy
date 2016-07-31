@@ -6,6 +6,12 @@ def Pq_vector(model, q, t=1):
 
     """
     Pq = np.zeros(model.nn)
+
+    try:
+        q(1, 1, 1)
+    except:
+        print("No internal heat source applied!")
+
     for e, conn in enumerate(model.CONN):
         xyz = model.XYZ[conn]
         pq = pq_vector(model, xyz, q, t)

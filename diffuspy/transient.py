@@ -24,10 +24,9 @@ def solver(model, material, internal_heat, flux_bc,
     ax = fig.add_axes([0.1, 0.1, .8, .8])
     ax.set_aspect('equal')
     ax.axis('off')
-    ax.set_title(r'Temperature ($^{\circ}C$)')
 
     cs = plotter.contour(model, Tn, contour_label=False, cbar=False,
-                         figure=False, vmin=vmin, vmax=vmax)
+                         title='Time: 0', figure=False, vmin=vmin, vmax=vmax)
 
     im = cs.collections
 
@@ -42,6 +41,7 @@ def solver(model, material, internal_heat, flux_bc,
 
         W = dt * (P - K @ Tn) + M @ Tn
         Mf, Wf = boundconditions.temperature(M, W, model, temperature_bc, t)
+
         Tn = solve(Mf, Wf)
 
         if np.amin(Tn) < vn:
@@ -51,19 +51,19 @@ def solver(model, material, internal_heat, flux_bc,
             vx = np.amax(Tn)
 
         cs = plotter.contour(model, Tn, contour_label=False,
+                             title='Time:'+str(t),
                              cbar=False, figure=False, vmin=vmin, vmax=vmax)
 
         im = cs.collections
 
         frames.append(im)
 
-    print(vn, vx)
-
     # Change the colorbar range
     sm = plt.cm.ScalarMappable(cmap='hot', norm=plt.Normalize(vmin=vmin,
                                                               vmax=vmax))
     # fake up the array of the scalar mappable. Urgh...
     sm._A = []
-    plt.colorbar(sm)
-    
+    cbar = plt.colorbar(sm)
+    cbar.set_label(r'Temperature $^{\circ}C$')
+
     return frames

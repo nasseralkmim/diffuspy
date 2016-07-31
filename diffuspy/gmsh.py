@@ -45,12 +45,12 @@ class Parse:
                 nl = [int(f) - 1 for f in num_list]
                 self.physical_surf[nl[0]] = nl[1]
 
-            if txt_line.startswith('Line'):
+            if txt_line.startswith('Line('):
                 nl = [int(f) - 1 for f in num_list]
                 self.line[nl[0]] = nl[1:]
 
             if txt_line.startswith('Line Loop'):
-                nl = [int(f) - 1 for f in num_list]
+                nl = [abs(int(f)) - 1 for f in num_list]
                 self.line_loop[nl[0]] = nl[1:]
 
         msh_path = os.path.join(filename+'.msh')
