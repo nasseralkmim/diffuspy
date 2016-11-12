@@ -20,7 +20,7 @@ def internal_heat(x1, x2, t=1):
 
 
 def flux_bc(x1, x2, t=1):
-    return {1: 10, 2: 0.0, 0: 0.0}
+    return {1: 0., 2: 0.0, 0: 0.0}
 
 
 def temperature_bc(x1, x2, t=1):

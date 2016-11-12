@@ -1,0 +1,4 @@
+-/diffuspy.egg-info/
+-*.pyc
+-/diffuspy/__pycache__/
+-/dist/

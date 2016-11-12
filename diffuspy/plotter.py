@@ -60,9 +60,14 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
                           cl=contour_label, vmin=vmin, vmax=vmax)
 
     if cbar is True:
-        cbar = fig.colorbar(cs)
+        # cbar = fig.colorbar(cs)
+        # # Change the colorbar range
+        sm = plt.cm.ScalarMappable(cmap=cmap,
+                                   norm=plt.Normalize(vmin=vmin, vmax=vmax))
+        # # fake up the array of the scalar mappable. Urgh...
+        sm._A = []
+        cbar = plt.colorbar(sm)
         cbar.set_label(r'Temperature $^{\circ}C$')
-
     return cs
 
 
