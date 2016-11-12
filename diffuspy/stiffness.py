@@ -9,7 +9,6 @@ def K_matrix(model, material):
     for e, conn in enumerate(model.CONN):
         xyz = model.XYZ[conn]
         surf = model.surf_of_ele[e]
-        # simple change
         try:
             cndtvt = material.cndtvt[surf]
         except:
