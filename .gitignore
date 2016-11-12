@@ -1,4 +1,4 @@
--/diffuspy.egg-info/
--*.pyc
--/diffuspy/__pycache__/
--/dist/
+diffuspy.egg-info/
+*.pyc
+diffuspy/__pycache__/
+dist/
