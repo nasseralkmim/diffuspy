@@ -139,7 +139,7 @@ class Parse:
         self.dphi_ei[1, :] = 0.5 * self.chi[:, 1] * e1_term
 
     def mapping(self, xyz):
-        """maps from cartesian to isoparametric.
+        """maps from isoparametric to cartesian.
 
         """
         x1, x2 = self.phi @ xyz

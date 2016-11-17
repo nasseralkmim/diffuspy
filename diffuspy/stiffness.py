@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def K_matrix(model, material):
+def K_matrix(model, material, t=1):
     """Build the global stiffness matrix
 
     """
@@ -9,7 +9,7 @@ def K_matrix(model, material):
     for e, conn in enumerate(model.CONN):
         xyz = model.XYZ[conn]
         surf = model.surf_of_ele[e]
-        # adding a comment
+
         try:
             cndtvt = material.cndtvt[surf]
         except:
@@ -17,7 +17,7 @@ def K_matrix(model, material):
                   'Default 1.0 was used!'.format(surf))
             cndtvt = 1.0
 
-        k = k_matrix(model, xyz, cndtvt)
+        k = k_matrix(model, xyz, cndtvt, t)
 
         id = np.ix_(conn, conn)
 
@@ -26,7 +26,7 @@ def K_matrix(model, material):
     return K
 
 
-def k_matrix(model, xyz, cndtvt):
+def k_matrix(model, xyz, cndtvt, t):
     """Build the element stiffness matrix
 
     """
@@ -40,6 +40,13 @@ def k_matrix(model, xyz, cndtvt):
 
         B = model.dphi_xi
 
-        k += cndtvt*(B.T @ B)*dJ
+        # Check if condutivity is a functions 
+        if callable(cndtvt) is True:
+            x1, x2 = model.mapping(xyz)
+            cndtvt_value = cndtvt(x1, x2, t)
+        else:
+            cndtvt_value = cndtvt
+
+        k += cndtvt_value*(B.T @ B)*dJ
 
     return k

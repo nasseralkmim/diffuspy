@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from diffuspy import draw
 import matplotlib.animation as animation
+import numpy as np
 
 
 def show():
@@ -14,8 +15,8 @@ def model(model, name=None, color='k', dpi=100, ele=False, ele_label=False,
     """
     fig = plt.figure(name, dpi=dpi)
     ax = fig.add_axes([.1, .1, .8, .8])
-    ax.set_xlabel(r'x')
-    ax.set_ylabel(r'y')
+    ax.set_xlabel(r'$x$')
+    ax.set_ylabel(r'$y$')
     ax.set_aspect('equal')
 
     draw.domain(model, ax, color=color)
@@ -60,10 +61,9 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
                           cl=contour_label, vmin=vmin, vmax=vmax)
 
     if cbar is True:
-        # cbar = fig.colorbar(cs)
         # # Change the colorbar range
         sm = plt.cm.ScalarMappable(cmap=cmap,
-                                   norm=plt.Normalize(vmin=vmin, vmax=vmax))
+                                   norm=plt.Normalize(vmin=np.amin(U), vmax=np.amax(U)))
         # # fake up the array of the scalar mappable. Urgh...
         sm._A = []
         cbar = plt.colorbar(sm)
