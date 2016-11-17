@@ -7,7 +7,8 @@ def find_num(string):
     """Find all numbers in a string
 
     """
-    num = re.findall(r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)', string)
+    # [+-]?(?:\d+(?:\.\d*)?|\.\d+) this one does't account for scientific notation
+    num = re.findall(r'[-+]?\d+[\.]?\d*[eE]?[-+]?\d*', string)
     return num
 
 

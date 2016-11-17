@@ -204,6 +204,6 @@ def tricontourf(model, U, ax, cmap='plasma', lev=10, cl=True, vmin=None,
                             vmin=vmin, vmax=vmax)
         ax.clabel(CS3, fontsize=8, colors='k', fmt='%1.1f')
 
-    ax.plot(ccx, ccy, '-k')
+    # ax.plot(ccx, ccy, '-k')
 
     return CS2
