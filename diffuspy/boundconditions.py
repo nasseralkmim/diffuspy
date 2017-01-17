@@ -5,6 +5,7 @@ def temperature(K, P, model, T_bc, t=1):
     for bound_line in T_bc(1, 1).keys():
         for line, n1, n2 in model.nodes_in_bound_line:
             if line == bound_line:
+                   
                 K[n1, :] = 0.0
                 K[n2, :] = 0.0
 
