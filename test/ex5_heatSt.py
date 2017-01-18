@@ -1,16 +1,17 @@
 from diffuspy import steadystate
-from diffuspy import gmsh
+from diffuspy.mesh import gmsh
 from diffuspy import plotter
 from diffuspy.material import Material
+from diffuspy.solvers import steadystate
 
 model_name = 'patch'
 
 model = gmsh.Parse(model_name)
 
 s = list(model.surf.keys())
-material = Material(cndtvt={s[0]: 1},
-                    spcfht={s[0]: 1},
-                    dnsty={s[0]: 0.1})
+material = Material(λ={s[0]: 1},
+                    c={s[0]: 1},
+                    ρ={s[0]: 0.1})
 
 def internal_heat(x1, x2, t=1):
     return 0.0

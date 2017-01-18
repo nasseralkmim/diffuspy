@@ -12,7 +12,7 @@ def find_num(string):
     return num
 
 
-class Parse:
+class Parse(object):
     """Parse the .geo and .msh file into dictionaries
 
     """
@@ -65,6 +65,8 @@ class Parse:
         self.surf_of_ele = {}
         # [line_tag node1_tag node2_tag]
         self.nodes_in_bound_line = []
+        # element TYPE: [e1_type, e2_type ...]
+        TYPE = []
 
         e_i = 0
         for txt_line in msh_file:
@@ -79,14 +81,17 @@ class Parse:
                 conn = [int(f) - 1 for f in num_list[5:]]
                 CONN[e_i] = conn
                 self.surf_of_ele[e_i] = int(num_list[4]) - 1
+                TYPE.append(int(num_list[1]))
                 e_i += 1
 
             if len(num_list) == 7:
                 nl = [int(f) - 1 for f in num_list[4:]]
                 self.nodes_in_bound_line.append([nl[0],  nl[1], nl[2]])
 
+        self.nodes_in_bound_line = np.array(self.nodes_in_bound_line)
         self.XYZ = np.array(list(XYZ.values()))
         self.CONN = np.array(list(CONN.values()))
+        self.TYPE = np.array(TYPE)
         self.ne = len(CONN)
         self.nn = len(XYZ)
 
