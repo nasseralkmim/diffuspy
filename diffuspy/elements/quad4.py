@@ -9,7 +9,7 @@ class Quad4(Element):
     """Constructor of a 4-node quadrangle (TYPE 3) element
 
     """
-    def __init__(self, eid, model, material, EPS0):
+    def __init__(self, eid, model, material):
 
         super().__init__(eid, model)
 
@@ -44,6 +44,9 @@ class Quad4(Element):
         else:
             self.side_at_boundary = []
             self.at_boundary_line = []
+
+
+        
 
     def shape_function(self, xez):
         """Create the basis function and evaluate them at xez coordinates
@@ -129,13 +132,11 @@ class Quad4(Element):
         ])
         return det_jac, dN_xi, arch_length
 
-    def stiffness_matrix(self, t=1):
+    def heat_stiffness_matrix(self, t=1):
         """Build the element stiffness matrix
 
         """
-        k = np.zeros((8, 8))
-
-        C = self.c_matrix(t)
+        k = np.zeros((4, 4))
 
         gauss_points = self.XEZ / np.sqrt(3.0)
 
@@ -143,90 +144,48 @@ class Quad4(Element):
             _, dN_ei = self.shape_function(xez=gp)
             dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
 
-            B = np.array([
-                [dN_xi[0, 0], 0, dN_xi[0, 1], 0, dN_xi[0, 2], 0,
-                 dN_xi[0, 3], 0],
-                [0, dN_xi[1, 0], 0, dN_xi[1, 1], 0, dN_xi[1, 2], 0,
-                 dN_xi[1, 3]],
-                [dN_xi[1, 0], dN_xi[0, 0], dN_xi[1, 1], dN_xi[0, 1],
-                 dN_xi[1, 2], dN_xi[0, 2], dN_xi[1, 3], dN_xi[0, 3]]])
+            B = dN_xi
 
-            k += (B.T @ C @ B)*dJ
+            # Check if condutivity is a function
+            if callable(self.c) is True:
+                x1, x2 = model.mapping(xyz)
+                c = self.c(x1, x2, t)
+            else:
+                c = self.c
+
+            k += c*(B.T @ B)*dJ
 
         return k
 
-    def mass_matrix(self, t=1):
+    def capacitance_matrix(self, t=1):
         """Build element mass matrix
 
         """
         return None
         
 
-    def c_matrix(self, t=1):
-        """Build the element constitutive matrix
-
-        """
-        self.C = np.zeros((3, 3))
-        self.C[0, 0] = 1.0
-        self.C[1, 1] = 1.0
-        self.C[1, 0] = self.nu
-        self.C[0, 1] = self.nu
-        self.C[2, 2] = (1.0 - self.nu)/2.0
-        self.C = (self.E/(1.0 - self.nu**2.0))*self.C
-
-        return self.C
-
-    def load_body_vector(self, b_force, t=1):
-        """Build the element vector due body forces b_force
+    def heat_source_vector(self, σ_q=None, t=1):
+        """Build the element vector due body forces σ_q
 
         """
         gauss_points = self.XEZ / np.sqrt(3.0)
 
-        pb = np.zeros(8)
+        pq = np.zeros(4)
+
         for gp in gauss_points:
             N, dN_ei = self.shape_function(xez=gp)
             dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
 
             x1, x2 = self.mapping(self.xyz)
 
-            pb[0] += N[0]*b_force(x1, x2, t)[0]*dJ
-            pb[1] += N[0]*b_force(x1, x2, t)[1]*dJ
-            pb[2] += N[1]*b_force(x1, x2, t)[0]*dJ
-            pb[3] += N[1]*b_force(x1, x2, t)[1]*dJ
-            pb[4] += N[2]*b_force(x1, x2, t)[0]*dJ
-            pb[5] += N[2]*b_force(x1, x2, t)[1]*dJ
-            pb[6] += N[3]*b_force(x1, x2, t)[0]*dJ
-            pb[7] += N[3]*b_force(x1, x2, t)[1]*dJ
+            if σ_q is not None:
+                pq[:] += N[:]*σ_q(x1, x2, t)*dJ
 
-        return pb
+        return pq
 
-    def load_strain_vector(self, t=1):
-        """Build the element vector due initial strain
 
-        """
-        C = self.c_matrix(t)
-
-        gauss_points = self.XEZ / np.sqrt(3.0)
-
-        pe = np.zeros(8)
-        for gp in gauss_points:
-            _, dN_ei = self.shape_function(xez=gp)
-            dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
-
-            B = np.array([
-                [dN_xi[0, 0], 0, dN_xi[0, 1], 0, dN_xi[0, 2], 0,
-                 dN_xi[0, 3], 0],
-                [0, dN_xi[1, 0], 0, dN_xi[1, 1], 0, dN_xi[1, 2], 0,
-                 dN_xi[1, 3]],
-                [dN_xi[1, 0], dN_xi[0, 0], dN_xi[1, 1], dN_xi[0, 1],
-                 dN_xi[1, 2], dN_xi[0, 2], dN_xi[1, 3], dN_xi[0, 3]]])
-
-            pe += (B.T @ C @ self.eps0)*dJ
-
-        return pe
-
-    def load_traction_vector(self, traction_bc, t=1):
-        """Build element load vector due traction_bction boundary condition
+    def heat_boundary_vector(self, q_bc, t=1):
+        """Build element load vector due q_bc  boundary condition
 
         """
         gp = np.array([
@@ -239,36 +198,30 @@ class Quad4(Element):
             [[-1.0, -1.0/np.sqrt(3)],
              [-1.0, 1/np.sqrt(3)]]])
 
-        pt = np.zeros(8)
+        pt = np.zeros(4)
 
-        # loop for specified boundary conditions
-        for key in traction_bc(1, 1).keys():
-            line = key[1]
+        if q_bc is not None:
+            # loop for specified boundary conditions
+            for key in q_bc(1, 1).keys():
+                line = key
 
-            for ele_boundary_line, ele_side in zip(self.at_boundary_line,
-                                                   self.side_at_boundary):
-                # Check if this element is at the line with traction
-                if line == ele_boundary_line:
+                for ele_boundary_line, ele_side in zip(self.at_boundary_line,
+                                                       self.side_at_boundary):
+                    # Check if this element is at the line with traction
+                    if line == ele_boundary_line:
 
-                    # perform the integral with GQ
-                    for w in range(2):
-                        N, dN_ei = self.shape_function(xez=gp[ele_side, w])
-                        _, _, arch_length = self.jacobian(self.xyz, dN_ei)
-                        
-                        dL = arch_length[ele_side]
-                        x1, x2 = self.mapping(self.xyz)
+                        # perform the integral with GQ
+                        for w in range(2):
+                            N, dN_ei = self.shape_function(xez=gp[ele_side, w])
+                            _, _, arch_length = self.jacobian(self.xyz, dN_ei)
 
-                        pt[0] += N[0] * traction_bc(x1, x2, t)[key][0] * dL
-                        pt[1] += N[0] * traction_bc(x1, x2, t)[key][1] * dL
-                        pt[2] += N[1] * traction_bc(x1, x2, t)[key][0] * dL
-                        pt[3] += N[1] * traction_bc(x1, x2, t)[key][1] * dL
-                        pt[4] += N[2] * traction_bc(x1, x2, t)[key][0] * dL
-                        pt[5] += N[2] * traction_bc(x1, x2, t)[key][1] * dL
-                        pt[6] += N[3] * traction_bc(x1, x2, t)[key][0] * dL
-                        pt[7] += N[3] * traction_bc(x1, x2, t)[key][1] * dL
+                            dL = arch_length[ele_side]
+                            x1, x2 = self.mapping(self.xyz)
 
-                else:
-                    # Catch element that is not at boundary
-                    continue
+                            pt[:] += N[:] * q_bc(x1, x2, t)[key] * dL
+
+                    else:
+                        # Catch element that is not at boundary
+                        continue
 
         return pt

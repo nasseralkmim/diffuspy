@@ -1,6 +1,5 @@
-from diffuspy import steadystate
 from diffuspy.mesh import gmsh
-from diffuspy import plotter
+from diffuspy.postprocess import plotter
 from diffuspy.material import Material
 from diffuspy.solvers import steadystate
 
@@ -13,17 +12,16 @@ material = Material(λ={s[0]: 1},
                     c={s[0]: 1},
                     ρ={s[0]: 0.1})
 
-def internal_heat(x1, x2, t=1):
-    return 0.0
+def σ_q(x1, x2, t=1):
+    return 0
 
-def flux_bc(x1, x2, t=1):
-    return {1: 10.0, 2: 0.0, 0: 0.0}
+def q_bc(x1, x2, t=1):
+    return {1: -20}
 
-def temperature_bc(x1, x2, t=1):
-    return {3: 10.0}
+def T_bc(x1, x2, t=1):
+    return {3: 50}
 
-T = steadystate.solver(model, material, internal_heat, flux_bc,
-                       temperature_bc)
+T = steadystate.solver(model, material, σ_q , q_bc, T_bc)
 
 plotter.contour(model, T)
 plotter.model(model, ele=True, edges_label=True)

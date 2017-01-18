@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from diffuspy import draw
+from diffuspy.postprocess import draw
 import matplotlib.animation as animation
 import numpy as np
 

@@ -95,6 +95,13 @@ class Parse(object):
         self.ne = len(CONN)
         self.nn = len(XYZ)
 
+
+        # Number of dofs, update in the model attributes
+        self.ndof = self.nn
+
+        # Dof of each element
+        self.DOF = self.CONN
+
         # Nodal coordinates in the natural domain
         self.chi = np.array([[-1.0, -1.0],
                              [1.0, -1.0],
