@@ -147,13 +147,13 @@ class Quad4(Element):
             B = dN_xi
 
             # Check if condutivity is a function
-            if callable(self.c) is True:
-                x1, x2 = model.mapping(xyz)
-                c = self.c(x1, x2, t)
+            if callable(self.λ) is True:
+                x1, x2 = self.mapping(self.xyz)
+                λ = self.λ(x1, x2, t)
             else:
-                c = self.c
+                λ = self.λ
 
-            k += c*(B.T @ B)*dJ
+            k += λ*(B.T @ B)*dJ
 
         return k
 
