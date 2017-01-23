@@ -1,69 +1,41 @@
-from diffuspy import boundconditions
-from diffuspy import stiffness
-from diffuspy import load
-from diffuspy import traction
-from diffuspy import mass
-from diffuspy import plotter
-from scipy.linalg import solve
+from diffuspy import boundary
 import numpy as np
-import matplotlib.pylab as plt
+from diffuspy import backwardeuler
 
 
-def solver(model, material, internal_heat, flux_bc,
-           temperature_bc, T0, interval, dt, vmin=None, vmax=None):
+def solver(model, material, t_int, dt, T0=0, σ_q=None, q_bc=None,
+           T_bc=None, T_a=None):
+    """Solver for the transient problem
 
-    K = stiffness.K_matrix(model, material)
+    """
+    print('Initializing solver...')
+    # compute the number of time steps N
+    # dt=t_int/3 -> N=3, t_int=6 -> 0-2, 2-4, 4-6
+    N = int(t_int/dt)
+    print('Number of steps: ', N)
+    # plus 1 to consider T[t=0]
+    T = np.zeros((model.ndof, N+1))
 
-    M = mass.M_matrix(model, material)
+    # initial condition
+    if np.size(T0) == 1:
+        T0 = np.ones(model.ndof) * T0
 
-    Tn = np.full(model.nn, T0)
+    T[:, 0] = T0
+    T_p = T0
 
-    frames = []
+    # n is the time step, +1 so the loop goes to the last step
+    for n in range(1, N+1):
+        t = n*dt
 
-    fig = plt.figure()
-    ax = fig.add_axes([0.1, 0.1, .8, .8])
-    ax.set_aspect('equal')
-    ax.axis('off')
+        K_u, F_u = backwardeuler.scheme(model, material, dt, t, T_p,
+                                        σ_q, q_bc, T_a)
 
-    cs = plotter.contour(model, Tn, contour_label=False, cbar=False,
-                         title='Time: 0', figure=False, vmin=vmin, vmax=vmax)
+        Km, Pm = boundary.temperature(K_u, F_u, model, T_bc)
 
-    im = cs.collections
+        T[:, n] = np.linalg.solve(Km, Pm)
 
-    frames.append(im)
-    vn, vx = 0, 0
-    for step in range(1, int(interval/dt + 1)):
-        t = step * dt
+        T_p = T[:, n]
 
-        Pq = load.Pq_vector(model, internal_heat, t)
-        Pt = traction.Pt_vector(model, flux_bc, t)
-        P = Pq + Pt
-
-        W = dt * (P - K @ Tn) + M @ Tn
-        Mf, Wf = boundconditions.temperature(M, W, model, temperature_bc, t)
-
-        Tn = solve(Mf, Wf)
-
-        if np.amin(Tn) < vn:
-            vn = np.amin(Tn)
-
-        if np.amax(Tn) > vx:
-            vx = np.amax(Tn)
-
-        cs = plotter.contour(model, Tn, contour_label=False,
-                             title='Time:'+str(t),
-                             cbar=False, figure=False, vmin=vmin, vmax=vmax)
-
-        im = cs.collections
-
-        frames.append(im)
-
-    # Change the colorbar range
-    sm = plt.cm.ScalarMappable(cmap='hot', norm=plt.Normalize(vmin=vmin,
-                                                              vmax=vmax))
-    # fake up the array of the scalar mappable. Urgh...
-    sm._A = []
-    cbar = plt.colorbar(sm)
-    cbar.set_label(r'Temperature $^{\circ}C$')
-
-    return frames
+    print('Solution completed!')
+    print('Temperature field is an array with shape: ', np.shape(T))
+    return T

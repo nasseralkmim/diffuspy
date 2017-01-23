@@ -184,8 +184,8 @@ def tricontourf(model, U, ax, cmap='plasma', lev=10, cl=True, vmin=None,
 
     xx, yy, zz = c[:, 0], c[:, 1], U
 
-    ccx = np.append(c[bn[:, 2], 0], c[bn[0, 1], 0])
-    ccy = np.append(c[bn[:, 2], 1], c[bn[0, 1], 1])
+    # ccx = np.append(c[bn[:, 2], 0], c[bn[0, 1], 0])
+    # ccy = np.append(c[bn[:, 2], 1], c[bn[0, 1], 1])
 
     triangles = []
     for n1, n2, n3, n4 in model.CONN:

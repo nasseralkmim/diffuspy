@@ -19,15 +19,30 @@ class Quad4(Element):
                              [1.0, 1.0],
                              [-1.0, 1.0]])
 
+        # check if conductivity was assigned
+        try:
+            self.λ = material.λ[self.surf]
+        except AttributeError:
+            print('Check if conductivity  were assigned for all surfaces!')
+        except KeyError:
+            print('Surface ', self.surf,
+                  ' with no material assigned!')
+
+        # check if capacitance material properties were assigned
         try:
             self.ρ = material.ρ[self.surf]
             self.c = material.c[self.surf]
-            self.λ = material.λ[self.surf]
         except AttributeError:
-            print('Check if material properties were assigned for all surfaces!')
+            pass
         except KeyError:
             print('Surface ', self.surf,
-                  ' with no material assigned! (Default used)')
+                  ' with no material assigned!')
+
+        # check if there is condutance and convective bc
+        try:
+            self.h = material.h
+        except AttributeError:
+            self.h = None
 
         # check if its a boundary element
         if eid in model.bound_ele[:, 0]:
@@ -44,9 +59,6 @@ class Quad4(Element):
         else:
             self.side_at_boundary = []
             self.at_boundary_line = []
-
-
-        
 
     def shape_function(self, xez):
         """Create the basis function and evaluate them at xez coordinates
@@ -91,16 +103,16 @@ class Quad4(Element):
         """Creates the Jacobian matrix of the mapping between an element
 
         Args:
-        xyz (array of floats): coordinates of element nodes in cartesian
-        coordinates
-        dN_ei (array of floats): derivative of shape functions
+            xyz (array of floats): coordinates of element nodes in cartesian
+                coordinates
+            dN_ei (array of floats): derivative of shape functions
 
         Return:
-        det_jac (float): determinant of the jacobian matrix
-        dN_xi (array of floats): derivative of shape function
-        with respect to cartesian system
-        arch_length (array of floats): arch length for change of variable
-        in the line integral
+            det_jac (float): determinant of the jacobian matrix
+            dN_xi (array of floats): derivative of shape function
+                with respect to cartesian system
+            arch_length (array of floats): arch length for change of variable
+                in the line integral
         """
         # Jac = [ x1_e1 x2_e1
         #         x1_e2 x2_e2 ]
@@ -133,10 +145,10 @@ class Quad4(Element):
         return det_jac, dN_xi, arch_length
 
     def heat_stiffness_matrix(self, t=1):
-        """Build the element stiffness matrix
+        """Build the element heat (q) stiffness (k) matrix
 
         """
-        k = np.zeros((4, 4))
+        k_q = np.zeros((4, 4))
 
         gauss_points = self.XEZ / np.sqrt(3.0)
 
@@ -153,19 +165,95 @@ class Quad4(Element):
             else:
                 λ = self.λ
 
-            k += λ*(B.T @ B)*dJ
+            k_q += λ * (B.T @ B) * dJ
 
-        return k
+        return k_q
 
-    def capacitance_matrix(self, t=1):
-        """Build element mass matrix
+    def heat_capacitance_matrix(self, t=1):
+        """Build element matrix (k) due internal thermal energy storage (s)
 
         """
-        return None
-        
+        k_s = np.zeros((4, 4))
+
+        gauss_points = self.XEZ / np.sqrt(3.0)
+
+        for gp in gauss_points:
+            N, dN_ei = self.shape_function(xez=gp)
+            dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
+
+            # Check if specific heat is a function
+            if callable(self.c) is True:
+                x1, x2 = self.mapping(self.xyz)
+                c = self.c(x1, x2, t)
+            else:
+                c = self.c
+
+            # Check if density is a function
+            if callable(self.ρ) is True:
+                x1, x2 = self.mapping(self.xyz)
+                ρ = self.ρ(x1, x2, t)
+            else:
+                ρ = self.ρ
+
+            k_s += c*ρ*(N.T @ N)*dJ
+
+        return k_s
+
+    def heat_convection_matrix(self, t=1):
+        """Build the element matrix (k) due convection boundary (c)
+
+        """
+        k_c = np.zeros((4, 4))
+
+        gp = np.array([
+            [[-1.0/np.sqrt(3), -1.0],
+             [1.0/np.sqrt(3), -1.0]],
+            [[1.0, -1.0/np.sqrt(3)],
+             [1.0, 1.0/np.sqrt(3)]],
+            [[-1.0/np.sqrt(3), 1.0],
+             [1.0/np.sqrt(3), 1.0]],
+            [[-1.0, -1.0/np.sqrt(3)],
+             [-1.0, 1/np.sqrt(3)]]])
+
+        # check if there is convection
+        if self.h is not None:
+
+            # loop for specified boundary conditions
+            for key in self.h.keys():
+                line = key
+
+                # check if condutance is a function h={line: function()}
+                if callable(self.h[line]) is True:
+                    x1, x2 = self.mapping(self.xyz)
+                    h = self.h[line](x1, x2, t)
+                else:
+                    h = self.h[line]
+
+                # loop over each boundary line that intersects the element
+                # sides
+                for ele_boundary_line, ele_side in zip(self.at_boundary_line,
+                                                       self.side_at_boundary):
+                    # Check if this element is at the line with convection bc
+                    if line == ele_boundary_line:
+
+                        # solve the integral with GQ
+                        for w in range(2):
+                            N, dN_ei = self.shape_function(xez=gp[ele_side, w])
+                            _, _, arch_length = self.jacobian(self.xyz, dN_ei)
+
+                            dL = arch_length[ele_side]
+                            x1, x2 = self.mapping(self.xyz)
+
+                            k_c += h * (N.T @ N) * dL
+
+                    else:
+                        # Catch element that is not at boundary
+                        continue
+
+        return k_c
 
     def heat_source_vector(self, σ_q=None, t=1):
-        """Build the element vector due body forces σ_q
+        """Build the element vector due internal heat (q) source (σ)
 
         """
         gauss_points = self.XEZ / np.sqrt(3.0)
@@ -179,13 +267,12 @@ class Quad4(Element):
             x1, x2 = self.mapping(self.xyz)
 
             if σ_q is not None:
-                pq[:] += N[:]*σ_q(x1, x2, t)*dJ
+                pq[:] += N[:] * σ_q(x1, x2, t) * dJ
 
         return pq
 
-
-    def heat_boundary_vector(self, q_bc, t=1):
-        """Build element load vector due q_bc  boundary condition
+    def heat_boundary_flux_vector(self, q_bc, t=1):
+        """Build element load vector due q_bc boundary condition
 
         """
         gp = np.array([
@@ -198,7 +285,7 @@ class Quad4(Element):
             [[-1.0, -1.0/np.sqrt(3)],
              [-1.0, 1/np.sqrt(3)]]])
 
-        pt = np.zeros(4)
+        p_t = np.zeros(4)
 
         if q_bc is not None:
             # loop for specified boundary conditions
@@ -210,7 +297,7 @@ class Quad4(Element):
                     # Check if this element is at the line with traction
                     if line == ele_boundary_line:
 
-                        # perform the integral with GQ
+                        # solve the integral with GQ
                         for w in range(2):
                             N, dN_ei = self.shape_function(xez=gp[ele_side, w])
                             _, _, arch_length = self.jacobian(self.xyz, dN_ei)
@@ -218,10 +305,68 @@ class Quad4(Element):
                             dL = arch_length[ele_side]
                             x1, x2 = self.mapping(self.xyz)
 
-                            pt[:] += N[:] * q_bc(x1, x2, t)[key] * dL
+                            p_t[:] += N[:] * q_bc(x1, x2, t)[line] * dL
 
                     else:
                         # Catch element that is not at boundary
                         continue
 
-        return pt
+        return p_t
+
+    def heat_boundary_convection_vector(self, T_a, t=1):
+        """Build the element heat vector due convection bc
+
+        """
+        gp = np.array([
+            [[-1.0/np.sqrt(3), -1.0],
+             [1.0/np.sqrt(3), -1.0]],
+            [[1.0, -1.0/np.sqrt(3)],
+             [1.0, 1.0/np.sqrt(3)]],
+            [[-1.0/np.sqrt(3), 1.0],
+             [1.0/np.sqrt(3), 1.0]],
+            [[-1.0, -1.0/np.sqrt(3)],
+             [-1.0, 1/np.sqrt(3)]]])
+
+        p_c = np.zeros(4)
+
+        # Try compute the vector due convection
+        if self.h is not None:
+
+            # loop for specified boundary condition line
+            for key in self.h.keys():
+                line = key
+
+                # check if condutance is a function h={line: function()}
+                if callable(self.h[line]) is True:
+                    x1, x2 = self.mapping(self.xyz)
+                    h = self.h[line](x1, x2, t)
+                else:
+                    h = self.h[line]
+
+                for ele_boundary_line, ele_side in zip(self.at_boundary_line,
+                                                       self.side_at_boundary):
+                    # Check if this element is at the line with traction
+                    if line == ele_boundary_line:
+
+                        # solve the integral with GQ
+                        for w in range(2):
+                            N, dN_ei = self.shape_function(xez=gp[ele_side, w])
+                            _, _, arch_length = self.jacobian(self.xyz, dN_ei)
+
+                            dL = arch_length[ele_side]
+
+                            # check if the sorrounded fluid temperature is
+                            # a function
+                            if callable(T_a):
+                                x1, x2 = self.mapping(self.xyz)
+                                T_a_v = T_a(x1, x2, t)[line]
+                            else:
+                                T_a_v = T_a[line]
+
+                            p_c[:] += N[:] * h * T_a_v * dL
+
+                    else:
+                        # Catch element that is not at boundary
+                        continue
+
+        return p_c

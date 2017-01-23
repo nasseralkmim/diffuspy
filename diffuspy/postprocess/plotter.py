@@ -63,18 +63,48 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
     if cbar is True:
         # # Change the colorbar range
         sm = plt.cm.ScalarMappable(cmap=cmap,
-                                   norm=plt.Normalize(vmin=np.amin(U), vmax=np.amax(U)))
+                                   norm=plt.Normalize(vmin=np.amin(U),
+                                                      vmax=np.amax(U)))
         # # fake up the array of the scalar mappable. Urgh...
         sm._A = []
         cbar = plt.colorbar(sm)
         cbar.set_label(r'Temperature $^{\circ}C$')
+
     return cs
 
 
-def anime(frames, dt):
-    """Plot animation with images frames
+def contour_animation(model, T, t_int, dt, name='Temperature.gif',
+                      bitrate=300, lev=10):
+    """Plot the animation for the temperature evolution countor plot
 
     """
-    fig = plt.gcf()
-    ani = animation.ArtistAnimation(fig, frames, interval=dt, blit=True)
-    return ani
+    print('Initializing plotter...')
+    N = int(t_int/dt)
+
+    frm = []
+
+    fig, ax = plt.subplots()
+
+    vmin, vmax = np.amin(T), np.amax(T)
+
+    for n in range(N+1):
+        t = n * dt
+        im = draw.tricontourf(model, T[:, n], ax, cmap='hot', lev=lev,
+                              vmin=vmin, vmax=vmax, cl=False)
+
+        te = ax.text(0, 1, "Time (h): "+str(round(t/(60*60), 2)),
+                     ha='left', va='top',
+                     transform=ax.transAxes)
+        frm.append(im.collections + [te])
+
+    # Change the colorbar range
+    sm = plt.cm.ScalarMappable(cmap='hot',
+                               norm=plt.Normalize(vmin=vmin, vmax=vmax))
+    # fake up the array of the scalar mappable. Urgh...
+    sm._A = []
+    cbar = plt.colorbar(sm)
+    cbar.set_label(r'Temperature $^{\circ} C$')
+
+    ani = animation.ArtistAnimation(fig, frm, interval=100, blit=True)
+    print('Plotting completed!')
+    ani.save(name, writer='imagemagick', bitrate=bitrate)
