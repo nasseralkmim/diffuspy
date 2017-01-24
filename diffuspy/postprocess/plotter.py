@@ -74,7 +74,8 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
 
 
 def contour_animation(model, T, t_int, dt, name='Temperature.gif',
-                      bitrate=300, lev=10):
+                      bitrate=300, lev=10, interval=100,
+                      time_text_color='black'):
     """Plot the animation for the temperature evolution countor plot
 
     """
@@ -94,7 +95,7 @@ def contour_animation(model, T, t_int, dt, name='Temperature.gif',
 
         te = ax.text(0, 1, "Time (h): "+str(round(t/(60*60), 2)),
                      ha='left', va='top',
-                     transform=ax.transAxes)
+                     transform=ax.transAxes, color=time_text_color)
         frm.append(im.collections + [te])
 
     # Change the colorbar range
@@ -105,6 +106,20 @@ def contour_animation(model, T, t_int, dt, name='Temperature.gif',
     cbar = plt.colorbar(sm)
     cbar.set_label(r'Temperature $^{\circ} C$')
 
-    ani = animation.ArtistAnimation(fig, frm, interval=100, blit=True)
-    print('Plotting completed!')
+    ani = animation.ArtistAnimation(fig, frm, interval=interval, blit=True)
     ani.save(name, writer='imagemagick', bitrate=bitrate)
+    print('Plotting completed!')
+
+
+def function(f, interval, line, xlabel, ylabel, **kwargs):
+    """Plots the function in the interval
+
+    """
+    fig, ax = plt.subplots()
+
+    x = np.linspace(0, interval)
+
+    ax.plot(x/3600, f(1, 1, x)[line], **kwargs)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.tight_layout()

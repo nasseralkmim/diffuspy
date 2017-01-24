@@ -38,12 +38,6 @@ class Quad4(Element):
             print('Surface ', self.surf,
                   ' with no material assigned!')
 
-        # check if there is condutance and convective bc
-        try:
-            self.h = material.h
-        except AttributeError:
-            self.h = None
-
         # check if its a boundary element
         if eid in model.bound_ele[:, 0]:
 
@@ -92,11 +86,12 @@ class Quad4(Element):
 
         return self.N, self.dN_ei
 
-    def mapping(self, xyz):
+    @staticmethod
+    def mapping(N, xyz):
         """maps from cartesian to isoparametric.
 
         """
-        x1, x2 = self.N @ xyz
+        x1, x2 = N @ xyz
         return x1, x2
 
     def jacobian(self, xyz, dN_ei):
@@ -153,14 +148,14 @@ class Quad4(Element):
         gauss_points = self.XEZ / np.sqrt(3.0)
 
         for gp in gauss_points:
-            _, dN_ei = self.shape_function(xez=gp)
+            N, dN_ei = self.shape_function(xez=gp)
             dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
 
             B = dN_xi
 
             # Check if condutivity is a function
             if callable(self.λ) is True:
-                x1, x2 = self.mapping(self.xyz)
+                x1, x2 = self.mapping(N, self.xyz)
                 λ = self.λ(x1, x2, t)
             else:
                 λ = self.λ
@@ -183,14 +178,14 @@ class Quad4(Element):
 
             # Check if specific heat is a function
             if callable(self.c) is True:
-                x1, x2 = self.mapping(self.xyz)
+                x1, x2 = self.mapping(N, self.xyz)
                 c = self.c(x1, x2, t)
             else:
                 c = self.c
 
             # Check if density is a function
             if callable(self.ρ) is True:
-                x1, x2 = self.mapping(self.xyz)
+                x1, x2 = self.mapping(N, self.xyz)
                 ρ = self.ρ(x1, x2, t)
             else:
                 ρ = self.ρ
@@ -199,7 +194,7 @@ class Quad4(Element):
 
         return k_s
 
-    def heat_convection_matrix(self, t=1):
+    def heat_convection_matrix(self, h, t=1):
         """Build the element matrix (k) due convection boundary (c)
 
         """
@@ -216,18 +211,11 @@ class Quad4(Element):
              [-1.0, 1/np.sqrt(3)]]])
 
         # check if there is convection
-        if self.h is not None:
+        if h is not None:
 
             # loop for specified boundary conditions
-            for key in self.h.keys():
+            for key in h(1, 1).keys():
                 line = key
-
-                # check if condutance is a function h={line: function()}
-                if callable(self.h[line]) is True:
-                    x1, x2 = self.mapping(self.xyz)
-                    h = self.h[line](x1, x2, t)
-                else:
-                    h = self.h[line]
 
                 # loop over each boundary line that intersects the element
                 # sides
@@ -241,10 +229,17 @@ class Quad4(Element):
                             N, dN_ei = self.shape_function(xez=gp[ele_side, w])
                             _, _, arch_length = self.jacobian(self.xyz, dN_ei)
 
-                            dL = arch_length[ele_side]
-                            x1, x2 = self.mapping(self.xyz)
+                            # check if condutance is a function
+                            if callable(h) is True:
+                                x1, x2 = self.mapping(N, self.xyz)
+                                h_v = h(x1, x2, t)[line]
+                            else:
+                                h_v = h[line]
 
-                            k_c += h * (N.T @ N) * dL
+                            dL = arch_length[ele_side]
+                            x1, x2 = self.mapping(N, self.xyz)
+
+                            k_c += h_v * (N.T @ N) * dL
 
                     else:
                         # Catch element that is not at boundary
@@ -264,7 +259,7 @@ class Quad4(Element):
             N, dN_ei = self.shape_function(xez=gp)
             dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
 
-            x1, x2 = self.mapping(self.xyz)
+            x1, x2 = self.mapping(N, self.xyz)
 
             if σ_q is not None:
                 pq[:] += N[:] * σ_q(x1, x2, t) * dJ
@@ -303,7 +298,7 @@ class Quad4(Element):
                             _, _, arch_length = self.jacobian(self.xyz, dN_ei)
 
                             dL = arch_length[ele_side]
-                            x1, x2 = self.mapping(self.xyz)
+                            x1, x2 = self.mapping(N, self.xyz)
 
                             p_t[:] += N[:] * q_bc(x1, x2, t)[line] * dL
 
@@ -313,7 +308,7 @@ class Quad4(Element):
 
         return p_t
 
-    def heat_boundary_convection_vector(self, T_a, t=1):
+    def heat_boundary_convection_vector(self, T_a, h, t=1):
         """Build the element heat vector due convection bc
 
         """
@@ -330,18 +325,11 @@ class Quad4(Element):
         p_c = np.zeros(4)
 
         # Try compute the vector due convection
-        if self.h is not None:
+        if h is not None:
 
             # loop for specified boundary condition line
-            for key in self.h.keys():
+            for key in h(1, 1).keys():
                 line = key
-
-                # check if condutance is a function h={line: function()}
-                if callable(self.h[line]) is True:
-                    x1, x2 = self.mapping(self.xyz)
-                    h = self.h[line](x1, x2, t)
-                else:
-                    h = self.h[line]
 
                 for ele_boundary_line, ele_side in zip(self.at_boundary_line,
                                                        self.side_at_boundary):
@@ -355,15 +343,22 @@ class Quad4(Element):
 
                             dL = arch_length[ele_side]
 
-                            # check if the sorrounded fluid temperature is
+                            # check if condutance is a function
+                            if callable(h) is True:
+                                x1, x2 = self.mapping(N, self.xyz)
+                                h_v = h(x1, x2, t)[line]
+                            else:
+                                h_v = h[line]
+
+                            # check if the surrounded fluid temperature is
                             # a function
-                            if callable(T_a):
-                                x1, x2 = self.mapping(self.xyz)
+                            if callable(T_a) is True:
+                                x1, x2 = self.mapping(N, self.xyz)
                                 T_a_v = T_a(x1, x2, t)[line]
                             else:
                                 T_a_v = T_a[line]
 
-                            p_c[:] += N[:] * h * T_a_v * dL
+                            p_c[:] += N[:] * h_v * T_a_v * dL
 
                     else:
                         # Catch element that is not at boundary

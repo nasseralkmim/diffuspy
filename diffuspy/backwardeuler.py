@@ -2,7 +2,7 @@ import numpy as np
 from diffuspy.constructor import constructor
 
 
-def scheme(model, material, dt, t, T_p, σ_q, q_bc, T_a):
+def scheme(model, material, dt, t, T_p, σ_q, q_bc, T_a, h):
     """perform the backward euler scheme and returns the global K_u and F_u
 
     The sufix u means update, p means previous
@@ -23,11 +23,11 @@ def scheme(model, material, dt, t, T_p, σ_q, q_bc, T_a):
         element = constructor(eid, model, material)
 
         k_q = element.heat_stiffness_matrix(t)
-        k_c = element.heat_convection_matrix(t)
+        k_c = element.heat_convection_matrix(h, t)
         k_s = element.heat_capacitance_matrix(t)
         p_q = element.heat_source_vector(σ_q, t)
         p_t = element.heat_boundary_flux_vector(q_bc, t)
-        p_c = element.heat_boundary_convection_vector(T_a, t)
+        p_c = element.heat_boundary_convection_vector(T_a, h, t)
 
         K_q[element.id_m] += k_q
         K_c[element.id_m] += k_c

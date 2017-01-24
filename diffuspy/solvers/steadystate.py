@@ -4,7 +4,7 @@ from diffuspy.constructor import constructor
 
 
 def solver(model, material, σ_q=None, q_bc=None,
-           T_bc=None, T_a=None):
+           T_bc=None, T_a=None, h=None):
     """Solver for the steadystate problem
 
     """
@@ -18,10 +18,10 @@ def solver(model, material, σ_q=None, q_bc=None,
         element = constructor(eid, model, material)
 
         k_q = element.heat_stiffness_matrix()
-        k_c = element.heat_convection_matrix()
+        k_c = element.heat_convection_matrix(h)
         p_q = element.heat_source_vector(σ_q)
         p_t = element.heat_boundary_flux_vector(q_bc)
-        p_c = element.heat_boundary_convection_vector(T_a)
+        p_c = element.heat_boundary_convection_vector(T_a, h)
 
         K_q[element.id_m] += k_q
         K_c[element.id_m] += k_c
