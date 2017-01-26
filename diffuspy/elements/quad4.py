@@ -23,20 +23,18 @@ class Quad4(Element):
         try:
             self.λ = material.λ[self.surf]
         except AttributeError:
-            print('Check if conductivity  were assigned for all surfaces!')
+            print('Conductivity (λ) not defined!')
         except KeyError:
             print('Surface ', self.surf,
-                  ' with no material assigned!')
+                  ' with no conductivity (λ) assigned!')
 
         # check if capacitance material properties were assigned
+        # if not, just pass because it maybe not a transient analysis
         try:
             self.ρ = material.ρ[self.surf]
             self.c = material.c[self.surf]
-        except AttributeError:
+        except:
             pass
-        except KeyError:
-            print('Surface ', self.surf,
-                  ' with no material assigned!')
 
         # check if its a boundary element
         if eid in model.bound_ele[:, 0]:
@@ -176,21 +174,34 @@ class Quad4(Element):
             N, dN_ei = self.shape_function(xez=gp)
             dJ, dN_xi, _ = self.jacobian(self.xyz, dN_ei)
 
-            # Check if specific heat is a function
-            if callable(self.c) is True:
-                x1, x2 = self.mapping(N, self.xyz)
-                c = self.c(x1, x2, t)
-            else:
-                c = self.c
+            # check if attribute and surface were assigned correctly
+            try:
+                # Check if specific heat is a function
+                if callable(self.c) is True:
+                    x1, x2 = self.mapping(N, self.xyz)
+                    c = self.c(x1, x2, t)
+                else:
+                    c = self.c
+            except AttributeError:
+                print('Specific heat (c) not defined')
+            except KeyError:
+                print('Surface ', self.surf,
+                      ' with no specific heat (c) assigned!')
 
-            # Check if density is a function
-            if callable(self.ρ) is True:
-                x1, x2 = self.mapping(N, self.xyz)
-                ρ = self.ρ(x1, x2, t)
-            else:
-                ρ = self.ρ
+            try:
+                # Check if density is a function
+                if callable(self.ρ) is True:
+                    x1, x2 = self.mapping(N, self.xyz)
+                    ρ = self.ρ(x1, x2, t)
+                else:
+                    ρ = self.ρ
+            except AttributeError:
+                print('Density (ρ) not defined')
+            except KeyError:
+                print('Surface ', self.surf,
+                      ' with no density (ρ) assigned!')
 
-            k_s += c*ρ*(N.T @ N)*dJ
+            k_s += c*ρ*(np.atleast_2d(N).T @ np.atleast_2d(N))*dJ
 
         return k_s
 
@@ -237,9 +248,9 @@ class Quad4(Element):
                                 h_v = h[line]
 
                             dL = arch_length[ele_side]
-                            x1, x2 = self.mapping(N, self.xyz)
 
-                            k_c += h_v * (N.T @ N) * dL
+                            k_c += h_v * (
+                                np.atleast_2d(N).T @ np.atleast_2d(N)) * dL
 
                     else:
                         # Catch element that is not at boundary
@@ -283,6 +294,7 @@ class Quad4(Element):
         p_t = np.zeros(4)
 
         if q_bc is not None:
+
             # loop for specified boundary conditions
             for key in q_bc(1, 1).keys():
                 line = key

@@ -47,6 +47,7 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
     """Plot stress with nodal stresses
 
     """
+    print('Initializing Plotter...')
     if figure is True:
         fig = plt.figure(name)
         ax = fig.add_axes([.1, .1, .8, .8])
@@ -69,6 +70,8 @@ def contour(model, U, cmap='hot', lev=10, name=None, contour_label=True,
         sm._A = []
         cbar = plt.colorbar(sm)
         cbar.set_label(r'Temperature $^{\circ}C$')
+
+    print('Plotter done!')
 
     return cs
 

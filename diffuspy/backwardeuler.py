@@ -7,6 +7,9 @@ def scheme(model, material, dt, t, T_p, σ_q, q_bc, T_a, h):
 
     The sufix u means update, p means previous
 
+    Args:
+        T_p: Previous temperature vector
+
     Return:
         K_u: the equivalent stiffness matrix updated
         F_u: the equivalent load vector updated

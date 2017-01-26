@@ -13,6 +13,7 @@ material = Material(λ={s[0]: 1},  # condutivity W/m C
                     c={s[0]: 1},  # specific heat J/kg C
                     ρ={s[0]: 1})  # density kg/ m3
 
+
 # Internal heat (q) current density source (σ) in W/ m3
 def σ_q(x1, x2, t=1):
     return 0

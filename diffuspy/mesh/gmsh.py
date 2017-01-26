@@ -95,7 +95,6 @@ class Parse(object):
         self.ne = len(CONN)
         self.nn = len(XYZ)
 
-
         # Number of dofs, update in the model attributes
         self.ndof = self.nn
 

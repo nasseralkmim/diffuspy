@@ -8,6 +8,7 @@ def solver(model, material, σ_q=None, q_bc=None,
     """Solver for the steadystate problem
 
     """
+    print('Initializing solver...')
     K_q = np.zeros((model.ndof, model.ndof))
     K_c = np.zeros((model.ndof, model.ndof))
     P_q = np.zeros(model.ndof)
@@ -35,5 +36,5 @@ def solver(model, material, σ_q=None, q_bc=None,
     Km, Pm = boundary.temperature(K, P, model, T_bc)
 
     T = np.linalg.solve(Km, Pm)
-
+    print('Solution completed!')
     return T

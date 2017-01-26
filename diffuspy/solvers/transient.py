@@ -35,7 +35,7 @@ def solver(model, material, t_int, dt, T0=0, σ_q=None, q_bc=None,
 
         T[:, n] = np.linalg.solve(Km, Pm)
 
-        T_p = T[:, n]
+        T_p = T[:, n]           # update T previous
 
     print('Solution completed!')
     print('Temperature field is an array with shape: ', np.shape(T))
