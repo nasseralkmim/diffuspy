@@ -8,7 +8,7 @@ def solver(model, material, σ_q=None, q_bc=None,
     """Solver for the steadystate problem
 
     """
-    print('Initializing solver...')
+    print('Initializing solver...', end='')
     K_q = np.zeros((model.ndof, model.ndof))
     K_c = np.zeros((model.ndof, model.ndof))
     P_q = np.zeros(model.ndof)

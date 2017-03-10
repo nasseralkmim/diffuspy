@@ -98,7 +98,7 @@ def nodes_label(model, ax):
 
     nx.draw_networkx_nodes(G, positions, node_color='w', node_size=140,
                            node_shape='s', ax=ax)
-    nx.draw_networkx_labels(G, positions, label, font_size=9, ax=ax)
+    nx.draw_networkx_labels(G, positions, label, font_size=6, ax=ax)
 
 
 def domain(model, ax, color='k'):
@@ -143,8 +143,8 @@ def elements(model, ax, color='k'):
 
     positions = nx.get_node_attributes(G2, 'posxy')
 
-    nx.draw_networkx(G2, positions, node_size=0, edge_color=color,
-                     font_size=0,  width=1, ax=ax)
+    nx.draw_networkx_edges(G2, positions, node_size=0, edge_color=color,
+                           width=1, ax=ax)
 
 
 def surface(model, ax, color='k'):
@@ -173,7 +173,7 @@ def surface(model, ax, color='k'):
 
 
 def tricontourf(model, U, ax, cmap='plasma', lev=10, cl=True, vmin=None,
-                vmax=None):
+                vmax=None, font_size=12):
     """Plot contour with the tricoutour function and the boundary line with
     the boundary node.
 
@@ -202,7 +202,7 @@ def tricontourf(model, U, ax, cmap='plasma', lev=10, cl=True, vmin=None,
     if cl is True:
         CS3 = ax.tricontour(xx, yy, triangles, zz, lev=lev, colors='k',
                             vmin=vmin, vmax=vmax)
-        ax.clabel(CS3, fontsize=8, colors='k', fmt='%1.1f')
+        ax.clabel(CS3, colors='k', fmt='%1.1f')
 
     # ax.plot(ccx, ccy, '-k')
 
