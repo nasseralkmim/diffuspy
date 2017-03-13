@@ -91,7 +91,7 @@ def contour_animation(model, T, t_int, dt, name='Temperature.gif',
     """Plot the animation for the temperature evolution countor plot
 
     """
-    print('Initializing plotter...', end='')
+    print('Plotting animation...', end='')
     N = int(t_int/dt)
 
     if time_scale == 'day':
@@ -130,7 +130,7 @@ def contour_animation(model, T, t_int, dt, name='Temperature.gif',
 
     ani = animation.ArtistAnimation(fig, frm, interval=interval, blit=True)
     ani.save(name, writer='imagemagick', bitrate=bitrate)
-    print('Plotting completed!')
+    print('Completed!')
 
 
 def function(f, interval, line, xlabel, ylabel, **kwargs):

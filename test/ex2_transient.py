@@ -4,7 +4,7 @@ from diffuspy.material import Material
 from diffuspy.solvers import transient
 import numpy as np
 
-model_name = 'patch-refined'
+model_name = 'patch'
 
 model = gmsh.Parse(model_name)
 
@@ -30,6 +30,7 @@ def T_bc(x1, x2, t=1):
     return {3: 30}
 
 
+
 # Surface condutance in W/m2 C
 def h(x1, x2, t=1):
     return {1: 100}
@@ -41,7 +42,7 @@ def T_a(x1, x2, t=1):
 
 
 t_int = 60 * 60 * 10
-dt = t_int / 100
+dt = t_int / 10
 T0 = 30
 
 plotter.function(T_a, t_int, line=1, xlabel='Time, (h)',

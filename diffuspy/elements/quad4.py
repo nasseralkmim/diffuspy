@@ -258,13 +258,21 @@ class Quad4(Element):
 
         return k_c
 
-    def heat_source_vector(self, σ_q=None, t=1):
+    def heat_source_vector(self, σ_q=None, t=1, T_ip=1, dα=1, tol=1e-5):
         """Build the element vector due internal heat (q) source (σ)
+
+        Args:
+            T_ip: Nodal temperature form previous iteration i
 
         """
         gauss_points = self.XEZ / np.sqrt(3.0)
 
         pq = np.zeros(4)
+
+        # find the average temperature of element
+        # check if heat source is nonlinear in T
+        if np.size(T_ip) > 1:
+            T_avg = np.average(T_ip[self.conn])
 
         for gp in gauss_points:
             N, dN_ei = self.shape_function(xez=gp)
@@ -273,8 +281,12 @@ class Quad4(Element):
             x1, x2 = self.mapping(N, self.xyz)
 
             if σ_q is not None:
-                pq[:] += N[:] * σ_q(x1, x2, t) * dJ
-
+                if 'Reaction Degree' in σ_q.__defaults__:
+                    pq[:] += N[:] * σ_q(x1, x2, t=t, dα=dα) * dJ
+                elif 'Temperature' in σ_q.__defaults__:
+                    pq[:] += N[:] * σ_q(x1, x2, t=t, T=T_avg) * dJ
+                else:
+                    pq[:] += N[:] * σ_q(x1, x2, t=t) * dJ
         return pq
 
     def heat_boundary_flux_vector(self, q_bc, t=1):
