@@ -30,7 +30,6 @@ def T_bc(x1, x2, t=1):
     return {3: 30}
 
 
-
 # Surface condutance in W/m2 C
 def h(x1, x2, t=1):
     return {1: 100}

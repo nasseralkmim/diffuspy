@@ -29,7 +29,8 @@ def T_bc(x1, x2, t=1):
 
 
 # Surface condutance in W/m2 C
-material.__dict__.update(h={1: 1})
+def h(x1, x2, t=1):
+    return {1: 100}
 
 
 # Temperature of the air K or C
@@ -37,9 +38,10 @@ def T_a(x1, x2, t=1):
     return {1: 1000}
 
 
-T = steadystate.solver(model, material, σ_q, q_bc, T_bc, T_a)
+T = steadystate.solver(model, material,
+                       σ_q=σ_q, q_bc=q_bc, T_bc=T_bc, T_a=T_a, h=h)
 
 plotter.contour(model, T)
-# plotter.model(model, ele=True, edges_label=True, nodes_label=True)
+plotter.model(model, ele=True, edges_label=True, nodes_label=True)
 
 plotter.show()
