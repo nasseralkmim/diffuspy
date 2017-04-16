@@ -43,7 +43,7 @@ def surface_label(model, ax):
         i += 1
 
 
-def edges_label(model, ax):
+def edges_label(model, ax, font_size=6):
     c = model.XYZ
 
     X, Y = c[:, 0], c[:, 1]
@@ -78,27 +78,32 @@ def edges_label(model, ax):
 
     positions = nx.get_node_attributes(G, 'posxy')
 
-    nx.draw_networkx_edge_labels(G, positions, edge_labels, label_pos=0.5,
-                                 font_size=9, font_color='b', ax=ax)
+    nx.draw_networkx_edge_labels(G, positions, edge_labels, label_pos=0.5, font_color='b',
+                                 ax=ax, font_size=font_size)
 
 
-def nodes_label(model, ax):
+def nodes_label(model, ax, font_size=6, node=None):
     c = model.XYZ
 
     X, Y = c[:, 0], c[:, 1]
 
     G = nx.Graph()
 
-    label = {}
-    for i in range(len(X)):
-        label[i] = i
-        G.add_node(i, posxy=(X[i], Y[i]))
+    if node is None:
+        label = {}
+        for i in range(len(X)):
+            label[i] = i
+            G.add_node(i, posxy=(X[i], Y[i]))
+    else:
+        label = {}
+        label[0] = node
+        G.add_node(0, posxy=(X[node], Y[node]))
 
     positions = nx.get_node_attributes(G, 'posxy')
 
-    nx.draw_networkx_nodes(G, positions, node_color='w', node_size=140,
-                           node_shape='s', ax=ax)
-    nx.draw_networkx_labels(G, positions, label, font_size=6, ax=ax)
+    nx.draw_networkx_nodes(G, positions, node_color='w',
+                           node_shape='s', ax=ax, node_size=70)
+    nx.draw_networkx_labels(G, positions, label, ax=ax, font_size=font_size)
 
 
 def domain(model, ax, color='k'):
