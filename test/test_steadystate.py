@@ -1,7 +1,4 @@
-from diffuspy.mesh import gmsh
-from diffuspy.postprocess import plotter
-from diffuspy.material import Material
-from diffuspy.solvers import steadystate
+from diffuspy import gmsh, Material, steadystate, plotter
 
 model_name = 'patch-refined'
 

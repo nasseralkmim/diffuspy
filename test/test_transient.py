@@ -1,7 +1,4 @@
-from diffuspy.mesh import gmsh
-from diffuspy.postprocess import plotter
-from diffuspy.material import Material
-from diffuspy.solvers import transient
+from diffuspy import gmsh, Material, transient, plotter
 import numpy as np
 
 model_name = 'patch'
