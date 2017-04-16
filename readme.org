@@ -1,0 +1,136 @@
+* Introduction
+[[https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png
+
+][
+file:https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png]]
+
+diffuspy is a library for solving the general heat equation in two dimensions using the finite element method.
+
+* How to download it
+
+#+BEGIN_SRC shell
+pip install diffuspy
+#+END_SRC
+
+
+* How to use it
+
+First we need a mesh file, the package uses the output created by gmsh: =.geo= and =.msh=.
+
+Then we write a script with the problem definition
+
+#+BEGIN_SRC ipython :session :exports both :results output drawer
+from diffuspy import gmsh, Material, steadystate, plotter
+
+model_name = 'test/patch-refined'
+
+model = gmsh.Parse(model_name)
+
+s = list(model.surf.keys())
+material = Material(λ={s[0]: 1},  # condutivity W/m C
+                    c={s[0]: 1},  # specific heat J/kg C
+                    ρ={s[0]: 0.1})  # density kg/ m3
+
+# Internal heat (q) current density source (σ) in W/ m3
+def σ_q(x1, x2, t=1, T=1):
+    return 0
+
+# Heat (q) current density assigned at the boundary (bc) in W/m3
+def q_bc(x1, x2, t=1):
+    return {}
+
+# Temperature (T) assigned at boundary (bc) in K or C
+def T_bc(x1, x2, t=1):
+    return {3: 30}
+
+# Surface condutance in W/m2 C
+def h(x1, x2, t=1):
+    return {1: 100}
+
+# Temperature of the air K or C
+def T_a(x1, x2, t=1):
+    return {1: 1000}
+
+T = steadystate.solver(model, material,
+                       σ_q=σ_q, q_bc=q_bc, T_bc=T_bc, T_a=T_a, h=h)
+
+plotter.contour(model, T)
+plotter.model(model, ele=True, edges_label=True, nodes_label=True)
+plotter.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+Initializing solver...Solution completed!
+Initializing Plotter...Plotting done!
+Plotting Model..Done
+
+[[https://cloud.githubusercontent.com/assets/9167399/25067802/c09bba5a-2224-11e7-99b5-e819ff41bc3c.png][file:https://cloud.githubusercontent.com/assets/9167399/25067802/c09bba5a-2224-11e7-99b5-e819ff41bc3c.png]]
+[[https://cloud.githubusercontent.com/assets/9167399/25067801/be4339a4-2224-11e7-9bf2-8916699e4d04.png][file:https://cloud.githubusercontent.com/assets/9167399/25067801/be4339a4-2224-11e7-9bf2-8916699e4d04.png]]
+
+:END:
+
+The library accepts as boundary conditions:
+1. Temperature specified in the contour
+2. Heat current density specified in the contour
+3. Convective boundary
+
+There is also a transient solver that discretizes the time domain using finite differences.
+
+#+BEGIN_SRC ipython :session :exports both :results output drawer
+from diffuspy import gmsh, Material, transient, plotter
+import numpy as np
+
+model_name = 'test/patch'
+
+model = gmsh.Parse(model_name)
+
+s = list(model.surf.keys())
+material = Material(λ={s[0]: 1},  # condutivity W/m C
+                    c={s[0]: 1},  # specific heat J/kg C
+                    ρ={s[0]: 1})  # density kg/ m3
+
+
+# Internal heat (q) current density source (σ) in W/ m3
+def σ_q(x1, x2, t=1):
+    return 0
+
+# Heat (q) current density assigned at the boundary (bc) in W/m3
+# negative mean entrying the domain
+def q_bc(x1, x2, t=1):
+    return {}
+
+# Temperature (T) assigned at boundary (bc) in K or C
+def T_bc(x1, x2, t=1):
+    return {3: 30}
+
+# Surface condutance in W/m2 C
+def h(x1, x2, t=1):
+    return {1: 100}
+
+# Temperature of the air in C
+def T_a(x1, x2, t=1):
+    return {1: 200 * np.sin(2*np.pi*t/(60*60))}
+
+t_int = 60 * 60 * 20
+dt = t_int / 100
+T0 = 30
+
+T = transient.solver(model, material, t_int, dt,
+                     T0, σ_q, q_bc, T_bc, T_a, h)
+
+plotter.contour_animation(model, T, t_int, dt, interval=200,
+                          time_text_color='black', name='temp_fiel.gif')
+plotter.show()
+#+END_SRC
+
+#+RESULTS:
+:RESULTS:
+Initializing solver...
+Number of steps:  100
+ Solution completed!
+Number of elements: 4 and Number of nodes: 9
+Temperature field is an array with shape:  (9, 101)
+Plotting animation...Completed!
+[[https://cloud.githubusercontent.com/assets/9167399/25067875/0e479966-2227-11e7-90d2-3fb4f3e811de.gif][file:https://cloud.githubusercontent.com/assets/9167399/25067875/0e479966-2227-11e7-90d2-3fb4f3e811de.gif]]
+:END:

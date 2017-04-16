@@ -3,3 +3,4 @@ diffuspy.egg-info/
 diffuspy/__pycache__/
 dist/
 .idea/
+/logo/

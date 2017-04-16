@@ -25,7 +25,7 @@ def solver(model, material, t_int, dt, T0=0, σ_q=None, q_bc=None,
     T[:, 0] = T0
     T_np = T0                   # initial Temperature
     α_np = np.zeros(model.ne)   # initial reaction degree
-    
+   
     α_avg = [0]
     t_avg = [0]
     # number of defaults parameters in the function
