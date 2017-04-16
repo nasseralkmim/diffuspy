@@ -1,8 +1,6 @@
 * Introduction
-[[https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png
 
-][
-file:https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png]]
+[[https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png][file:https://cloud.githubusercontent.com/assets/9167399/25067736/6a4f19f4-2223-11e7-9b58-5173aaf25014.png]]
 
 diffuspy is a library for solving the general heat equation in two dimensions using the finite element method.
 
